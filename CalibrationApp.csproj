@@ -13,6 +13,8 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Accord" Version="3.8.2-alpha" />
+        <PackageReference Include="alglib.net" Version="3.19.0" />
         <PackageReference Include="Avalonia" Version="11.3.9"/>
         <PackageReference Include="Avalonia.Desktop" Version="11.3.9"/>
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9"/>
@@ -22,6 +24,11 @@
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="Deedle" Version="3.0.0" />
+        <PackageReference Include="HelixToolkit" Version="3.1.2" />
+        <PackageReference Include="MathNet.Numerics" Version="6.0.0-beta2" />
         <PackageReference Include="ReactiveUI.Avalonia" Version="11.3.8"/>
+        <PackageReference Include="ScottPlot.Avalonia" Version="5.1.57" />
+        <PackageReference Include="Veldrid" Version="4.9.0" />
     </ItemGroup>
 </Project>
