@@ -15,22 +15,82 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <DockPanel LastChildFill="True">
-        <Border Height="25" Background="SkyBlue" BorderBrush="Black" BorderThickness="1" DockPanel.Dock="Top">
-            <TextBlock Foreground="Black">Dock = "Top"</TextBlock>
+    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto"  Margin="0">
+        <Menu Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="5">
+            <MenuItem Header="_Файл">
+                <MenuItem Header="_Загрузить данные" Click="UploadData"/>
+                <MenuItem Header="_Выход" />
+            </MenuItem>
+            <MenuItem Header="_Правка">
+                
+            </MenuItem>
+            <MenuItem Header="_Экспорт">
+                
+            </MenuItem>
+            <MenuItem Header="_Вид">
+                
+            </MenuItem>
+            <MenuItem Header="_Справка">
+                
+            </MenuItem>
+        </Menu>        
+        <Button Grid.Row="1" Grid.Column="0"  Click="UploadData" Padding="10" Margin="2" >Загрузить данные</Button>
+        <Border Grid.Row="2" Grid.Column="0" Background="Gainsboro"
+                BorderBrush="Black"
+                BorderThickness="2"
+                CornerRadius="3"
+                BoxShadow="5 5 10 0 DarkGray"
+                Padding="0" Margin="0">
+            <StackPanel Margin="2" >
+                <TextBlock Padding="2" FontWeight="ExtraBold">Параметры обработки</TextBlock>
+                <StackPanel Orientation="Horizontal" Margin="2">
+                    <TextBlock Margin="6">Окно сглаживания</TextBlock>
+                    <NumericUpDown Value="10" />
+                </StackPanel>  
+                <StackPanel Orientation="Horizontal" Margin="2">
+                    <TextBlock Margin="6">Параметры LOWESS</TextBlock>
+                    <NumericUpDown Value="0.5" Increment="0.05" FormatString="0.00" Minimum="0.05" Maximum="1"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="2">
+                    <TextBlock Margin="6">Порог выбросов</TextBlock>
+                    <NumericUpDown Value="1" Increment="1" FormatString="0.00"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="2">
+                    <TextBlock Margin="6">Метод выбросов</TextBlock>
+                    <ComboBox>
+                        <ComboBoxItem>z-score</ComboBoxItem><!--данные методы будут добавляться по мере разработки математической модели-->
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="2">
+                    <TextBlock Margin="6">Тип фильтра</TextBlock>
+                    <ComboBox >
+                        <ComboBoxItem>butter</ComboBoxItem><!--mvp приложение будет насчитывать только 4 фильтра-->
+                    </ComboBox>
+                </StackPanel>
+            </StackPanel>
         </Border>
-        <Border Height="25" Background="SkyBlue" BorderBrush="Black" BorderThickness="1" DockPanel.Dock="Top">
-            <TextBlock Foreground="Black">Dock = "Top"</TextBlock>
-        </Border>
-        <Border Height="25" Background="LemonChiffon" BorderBrush="Black" BorderThickness="1" DockPanel.Dock="Bottom">
-            <TextBlock Foreground="Black">Dock = "Bottom"</TextBlock>
-        </Border>
-        <Border Width="200" Background="PaleGreen" BorderBrush="Black" BorderThickness="1" DockPanel.Dock="Left">
-            <TextBlock Foreground="Black">Dock = "Left"</TextBlock>
-        </Border>
-        <Border Background="White" BorderBrush="Black" BorderThickness="1">
-            <TextBlock Foreground="Blue">This content will "Fill" the remaining space</TextBlock>
-        </Border>
-    </DockPanel>
+        <Border Grid.Row="3" Grid.Column="0" Background="Gainsboro"
+                BorderBrush="Black"
+                BorderThickness="2"
+                CornerRadius="3"
+                BoxShadow="5 5 10 0 DarkGray"
+                Padding="0" Margin="0">
+            <StackPanel Margin="2">
+                <TextBlock Padding="2" FontWeight="ExtraBold">Калибровка</TextBlock>
+                <StackPanel Orientation="Horizontal" Margin="2">
+                    <TextBlock Padding="5">Выбор сенсора</TextBlock>
+                    <ComboBox>
+                        <ComboBoxItem>0</ComboBoxItem> <!--добавляться автоматически из кода при чтении файла с данными(сырыми)-->
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="2">
+                    <TextBlock Padding="5">Метод калибровки</TextBlock>
+                    <ComboBox>
+                        <ComboBoxItem>Median</ComboBoxItem> <!--данные методы будут добавляться по мере разработки математической модели-->
+                    </ComboBox>
+                </StackPanel>
+            </StackPanel>
+        </Border>    
+    </Grid>
 
 </Window>
