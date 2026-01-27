@@ -141,19 +141,24 @@
         
         <!-- Right Panel with TabControl -->
         <TabControl Grid.Row="1" Grid.Column="2" Margin="10,0,0,0">
-            <TabItem Header="Вкладка 1">
+            <TabItem Header="Графики">
                 <StackPanel >
                     <TextBlock>Содержание первой вкладки</TextBlock>
                 </StackPanel>
             </TabItem>
-            <TabItem Header="Вкладка 2">
+            <TabItem Header="Статистика">
                 <StackPanel >
                     <TextBlock>Содержание второй вкладки</TextBlock>
                 </StackPanel>
             </TabItem>
-            <TabItem Header="Вкладка 3">
+            <TabItem Header="Сравнение">
                 <StackPanel >
                     <TextBlock>Содержание третьей вкладки</TextBlock>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="3D Визуализация">
+                <StackPanel >
+                    <TextBlock>Содержание четвертой вкладки</TextBlock>
                 </StackPanel>
             </TabItem>
         </TabControl>
