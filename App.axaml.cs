@@ -1,28 +1,37 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using CalibrationApp.Services;
 using CalibrationApp.ViewModels;
 using CalibrationApp.Views;
 
-namespace CalibrationApp;
-
-public partial class App : Application
+namespace CalibrationApp
 {
-    public override void Initialize()
+    public partial class App : Application
     {
-        AvaloniaXamlLoader.Load(this);
-    }
-
-    public override void OnFrameworkInitializationCompleted()
-    {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        public override void Initialize()
         {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new MainWindowViewModel(),
-            };
+            AvaloniaXamlLoader.Load(this);
         }
 
-        base.OnFrameworkInitializationCompleted();
+        public override void OnFrameworkInitializationCompleted()
+        {
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                // Создаем сервисы
+                var fileService = new FileService();
+                var processingService = new SignalProcessingService();
+                
+                // Создаем ViewModel с зависимостями
+                var mainViewModel = new MainWindowViewModel(fileService, processingService);
+                
+                desktop.MainWindow = new MainWindow
+                {
+                    DataContext = mainViewModel
+                };
+            }
+
+            base.OnFrameworkInitializationCompleted();
+        }
     }
 }

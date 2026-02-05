@@ -1,165 +1,200 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:CalibrationApp.ViewModels"
+        xmlns:v="using:CalibrationApp.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080"
+        mc:Ignorable="d"
+        d:DesignWidth="1600" 
+        d:DesignHeight="900"
         x:Class="CalibrationApp.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="CalibrationApp">
-
+        Title="Calibra - Анализатор данных сенсоров">
+        
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,*" Margin="10">
-        <!-- Menu -->
-        <Menu Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
+    <Grid RowDefinitions="Auto,*" ColumnDefinitions="300,*">
+        <!-- Меню -->
+        <Menu Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <MenuItem Header="_Файл">
-                <MenuItem Header="_Загрузить данные" Click="UploadData"/>
-                <MenuItem Header="_Выход" />
+                <MenuItem Header="_Загрузить данные" Command="{Binding LoadDataCommand}"/>
+                <MenuItem Header="_Экспорт данных" Command="{Binding ExportDataCommand}"/>
+                <MenuItem Header="_Выход" Command="{Binding ExitCommand}"/>
             </MenuItem>
-            <MenuItem Header="_Правка">
-                
-            </MenuItem>
-            <MenuItem Header="_Экспорт">
-                
+            <MenuItem Header="_Обработка">
+                <MenuItem Header="_Обработать данные" Command="{Binding ProcessDataCommand}"/>
+                <MenuItem Header="_Сбросить результаты"/>
             </MenuItem>
             <MenuItem Header="_Вид">
-                
+                <MenuItem Header="_Темная тема"/>
+                <MenuItem Header="_Светлая тема"/>
             </MenuItem>
             <MenuItem Header="_Справка">
-                
+                <MenuItem Header="_О программе"/>
             </MenuItem>
         </Menu>
         
-        <!-- Left Panel with ScrollViewer -->
-        <ScrollViewer Grid.Row="1" Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,10,0,0">
-            <StackPanel Spacing="5" >
-                <Button Click="UploadData" Padding="10" Margin="2">Загрузить данные</Button>
+        <!-- Левая панель управления -->
+        <ScrollViewer Grid.Row="1" Grid.Column="0" 
+                      VerticalScrollBarVisibility="Auto" 
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="10" Margin="10">
+                <!-- Загрузка данных -->
+                <Button Content="📂 Загрузить данные" 
+                        Command="{Binding LoadDataCommand}"
+                        Height="40" 
+                        FontSize="14" 
+                        FontWeight="Bold"
+                        Background="#0d7377" 
+                        Foreground="White"/>
                 
-                <Border Background="Gainsboro"
-                        BorderBrush="Black"
-                        BorderThickness="2"
-                        CornerRadius="3"
-                        BoxShadow="5 5 10 0 DarkGray"
-                        Padding="0" Margin="0">
-                    <StackPanel Margin="2">
-                        <TextBlock Padding="2" FontWeight="ExtraBold">Параметры обработки</TextBlock>
-                        <StackPanel Orientation="Horizontal" Margin="2">
-                            <TextBlock Margin="6">Окно сглаживания</TextBlock>
-                            <NumericUpDown Value="10" />
-                        </StackPanel>  
-                        <StackPanel Orientation="Horizontal" Margin="2">
-                            <TextBlock Margin="6">Параметры LOWESS</TextBlock>
-                            <NumericUpDown Value="0.5" Increment="0.05" FormatString="0.00" Minimum="0.05" Maximum="1"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="2">
-                            <TextBlock Margin="6">Порог выбросов</TextBlock>
-                            <NumericUpDown Value="1" Increment="1" FormatString="0.00"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="2">
-                            <TextBlock Margin="6">Метод выбросов</TextBlock>
-                            <ComboBox>
-                                <ComboBoxItem>z-score</ComboBoxItem><!--данные методы будут добавляться по мере разработки математической модели-->
-                            </ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="2">
-                            <TextBlock Margin="6">Тип фильтра</TextBlock>
-                            <ComboBox >
-                                <ComboBoxItem>butter</ComboBoxItem><!--mvp приложение будет насчитывать только 4 фильтра-->
-                            </ComboBox>
+                <!-- Параметры обработки (замена GroupBox на Border + Header) -->
+                <Border BorderBrush="#3f3f46" BorderThickness="1" CornerRadius="4" Padding="6">
+                    <StackPanel>
+                        <TextBlock Text="Параметры обработки" FontWeight="Bold" Margin="4"/>
+                        <StackPanel Spacing="10" Margin="0,6,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="Окно сглаживания:" Width="130" VerticalAlignment="Center"/>
+                                <NumericUpDown Value="{Binding WindowSize}" 
+                                              Minimum="1" Maximum="50" 
+                                              Width="80"/>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="Параметр LOWESS:" Width="130" VerticalAlignment="Center"/>
+                                <Slider Value="{Binding LowessFraction}" 
+                                       Minimum="0.01" Maximum="0.5" 
+                                       TickFrequency="0.01" 
+                                       Width="150"/>
+                                <TextBlock Text="{Binding LowessFraction, StringFormat={}{0:F2}}" 
+                                          Width="40" 
+                                          TextAlignment="Center" 
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="Порог выбросов:" Width="130" VerticalAlignment="Center"/>
+                                <Slider Value="{Binding OutlierThreshold}" 
+                                       Minimum="1.0" Maximum="10.0" 
+                                       TickFrequency="0.5" 
+                                       Width="150"/>
+                                <TextBlock Text="{Binding OutlierThreshold, StringFormat={}{0:F1}}" 
+                                          Width="40" 
+                                          TextAlignment="Center" 
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="Метод выбросов:" Width="130" VerticalAlignment="Center"/>
+                                <ComboBox ItemsSource="{Binding OutlierMethods}" 
+                                         SelectedItem="{Binding OutlierMethod}" 
+                                         Width="150"/>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="Тип фильтра:" Width="130" VerticalAlignment="Center"/>
+                                <ComboBox ItemsSource="{Binding FilterTypes}" 
+                                         SelectedItem="{Binding FilterType}" 
+                                         Width="150"/>
+                            </StackPanel>
+                            
+                            <Button Content="⚙️ Обработать данные" 
+                                    Command="{Binding ProcessDataCommand}"
+                                    Height="40" 
+                                    FontWeight="Bold"
+                                    Background="#4e4376" 
+                                    Foreground="White"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
                 
-                <Border Background="Gainsboro"
-                        BorderBrush="Black"
-                        BorderThickness="2"
-                        CornerRadius="3"
-                        BoxShadow="5 5 10 0 DarkGray"
-                        Padding="0" Margin="0">
-                    <StackPanel Margin="2">
-                        <TextBlock Padding="2" FontWeight="ExtraBold">Калибровка</TextBlock>
-                        <StackPanel Orientation="Horizontal" Margin="2">
-                            <TextBlock Padding="5">Выбор сенсора</TextBlock>
-                            <ComboBox>
-                                <ComboBoxItem>0</ComboBoxItem> <!--добавляться автоматически из кода при чтении файла с данными(сырыми)-->
-                            </ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="2">
-                            <TextBlock Padding="5">Метод калибровки</TextBlock>
-                            <ComboBox>
-                                <ComboBoxItem>Median</ComboBoxItem> <!--данные методы будут добавляться по мере разработки математической модели-->
-                            </ComboBox>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-                
-                <Border Background="Gainsboro"
-                        BorderBrush="Black"
-                        BorderThickness="2"
-                        CornerRadius="3"
-                        BoxShadow="5 5 10 0 DarkGray"
-                        Padding="0" Margin="0">
-                    <StackPanel Margin="2">
-                        <TextBlock Padding="2" FontWeight="ExtraBold">Информация о данных</TextBlock>
-                        <StackPanel Orientation="Horizontal" Margin="2">
-                            <TextBox Padding="2" Width="200" Height="100" IsReadOnly="True">
-                                Данные не загружены
-                            </TextBox>
+                <!-- Параметры калибровки (замена GroupBox) -->
+                <Border BorderBrush="#3f3f46" BorderThickness="1" CornerRadius="4" Padding="6">
+                    <StackPanel>
+                        <TextBlock Text="Калибровка" FontWeight="Bold" Margin="4"/>
+                        <StackPanel Spacing="10" Margin="0,6,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="Сенсор:" Width="130" VerticalAlignment="Center"/>
+                                <NumericUpDown Value="{Binding CurrentSensor}" 
+                                              Minimum="1" Maximum="8" 
+                                              Width="80"/>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="Метод калибровки:" Width="130" VerticalAlignment="Center"/>
+                                <ComboBox ItemsSource="{Binding CalibrationMethods}" 
+                                         SelectedItem="{Binding CalibMethod}" 
+                                         Width="150"/>
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </Border>
                 
-                <Border Background="Gainsboro"
-                        BorderBrush="Black"
-                        BorderThickness="2"
-                        CornerRadius="3"
-                        BoxShadow="5 5 10 0 DarkGray"
-                        Padding="0" Margin="0">
-                    <StackPanel Margin="2">
-                        <TextBlock Padding="2" FontWeight="ExtraBold">Действия</TextBlock>
-                        <StackPanel Orientation="Horizontal" Margin="2">
-                            <Button Padding="10" Margin="2">Сохранить</Button>
-                            <Button Padding="10" Margin="2">Экспортировать</Button>
+                <!-- Информация о данных (замена GroupBox) -->
+                <Border BorderBrush="#3f3f46" BorderThickness="1" CornerRadius="4" Padding="6">
+                    <StackPanel>
+                        <TextBlock Text="Информация о данных" FontWeight="Bold" Margin="4"/>
+                        <StackPanel Spacing="5" Margin="10">
+                            <TextBlock Text="Статус:" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding StatusMessage}" Foreground="#9cdcfe"/>
+                            <ProgressBar IsVisible="{Binding IsProcessing}" IsIndeterminate="{Binding IsProcessing}" Height="8" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="2">
-                            <Button Padding="10" Margin="2">Поиск аномалий</Button>
-                            <Button Padding="10" Margin="2">Сброс параметров</Button>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Дополнительные действия (замена GroupBox) -->
+                <Border BorderBrush="#3f3f46" BorderThickness="1" CornerRadius="4" Padding="6">
+                    <StackPanel>
+                        <TextBlock Text="Дополнительные действия" FontWeight="Bold" Margin="4"/>
+                        <StackPanel Spacing="5" Margin="10">
+                            <Button Content="🔍 Поиск аномалий" Height="30" Background="#0d7377" Foreground="White"/>
+                            <Button Content="📊 Экспорт отчета" Height="30" Background="#4e4376" Foreground="White"/>
+                            <Button Content="🔄 Сброс параметров" Height="30" Background="#7a3a5c" Foreground="White"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
             </StackPanel>
         </ScrollViewer>
         
-        <!-- GridSplitter -->
-        <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" Background="LightGray" Cursor="SizeWestEast"/>
-        
-        <!-- Right Panel with TabControl -->
-        <TabControl Grid.Row="1" Grid.Column="2" Margin="10,0,0,0">
-            <TabItem Header="Графики">
-                <StackPanel >
-                    <TextBlock>Содержание первой вкладки</TextBlock>
-                </StackPanel>
+        <!-- Правая панель с вкладками -->
+        <TabControl Grid.Row="1" Grid.Column="1" Margin="10,10,10,10">
+            <TabItem Header="📊 Графики">
+                <Grid RowDefinitions="*,*">
+                    <v:PlotView Grid.Row="0" 
+                                x:Name="RawPlotView" 
+                                DataContext="{Binding RawPlotViewModel}"/>
+                    <v:PlotView Grid.Row="1" 
+                                x:Name="CalibPlotView" 
+                                DataContext="{Binding CalibPlotViewModel}" 
+                                Margin="0,10,0,0"/>
+                </Grid>
             </TabItem>
-            <TabItem Header="Статистика">
-                <StackPanel >
-                    <TextBlock>Содержание второй вкладки</TextBlock>
-                </StackPanel>
+            
+            <TabItem Header="📈 Статистика">
+                <!-- Заменил DataGrid на ListBox с простым шаблоном -->
+                <ListBox ItemsSource="{Binding SensorStatistics}" Background="#1e1e1e" Foreground="#d4d4d4">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SensorStat">
+                            <Border Padding="6" BorderBrush="#2a2a2a" BorderThickness="0,0,0,1">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Width="60" Text="{Binding SensorNumber}"/>
+                                    <TextBlock Width="90" Text="{Binding Mean, StringFormat={}{0:F4}}"/>
+                                    <TextBlock Width="90" Text="{Binding Median, StringFormat={}{0:F4}}"/>
+                                    <TextBlock Width="90" Text="{Binding StdDev, StringFormat={}{0:F4}}"/>
+                                    <TextBlock Width="70" Text="{Binding Min, StringFormat={}{0:F4}}"/>
+                                    <TextBlock Width="70" Text="{Binding Max, StringFormat={}{0:F4}}"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                     </ListBox.ItemTemplate>
+                 </ListBox>
             </TabItem>
-            <TabItem Header="Сравнение">
-                <StackPanel >
-                    <TextBlock>Содержание третьей вкладки</TextBlock>
-                </StackPanel>
-            </TabItem>
-            <TabItem Header="3D Визуализация">
-                <StackPanel >
-                    <TextBlock>Содержание четвертой вкладки</TextBlock>
-                </StackPanel>
+            
+            <TabItem Header="🔄 Сравнение">
+                <v:PlotView x:Name="ComparisonPlotView" DataContext="{Binding ComparisonPlotViewModel}"/>
             </TabItem>
         </TabControl>
     </Grid>
-</Window> 
+</Window>

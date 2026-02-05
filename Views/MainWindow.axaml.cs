@@ -1,22 +1,30 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Controls;
-
-namespace CalibrationApp.Views;
-
-public partial class MainWindow : Window
+using CalibrationApp.ViewModels;
+using System.Reactive.Linq;
+namespace CalibrationApp.Views
 {
-    public MainWindow()
+    public partial class MainWindow : Window
     {
-        InitializeComponent();
-    }
-    public void UploadData(object? sender, RoutedEventArgs e)
-    {
-        var openFileDialog = new OpenFileDialog();
-        openFileDialog.Title = "Select Data File";
-        openFileDialog.Filters.Add(new FileDialogFilter() { Name = "Data Files", Extensions = { "csv", "txt" } });
-        openFileDialog.AllowMultiple = false;
-
-        var result = openFileDialog.ShowAsync(this);
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+        
+        private async void UploadData(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                await vm.LoadDataCommand.Execute();
+            }
+        }
+        
+        private async void ProcessData(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                await vm.ProcessDataCommand.Execute();
+            }
+        }
     }
 }

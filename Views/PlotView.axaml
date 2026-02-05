@@ -1,7 +1,56 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CalibrationApp.ViewModels"
+             xmlns:sp="using:ScottPlot.Avalonia"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="CalibrationApp.Views.PlotView">
+             mc:Ignorable="d"
+             x:Class="CalibrationApp.Views.PlotView"
+             x:DataType="vm:PlotViewModel"
+             d:DesignWidth="800" d:DesignHeight="400">
+    
+    <Design.DataContext>
+        <vm:PlotViewModel/>
+    </Design.DataContext>
+
+    <Border BorderBrush="#3f3f46" BorderThickness="1" CornerRadius="4">
+        <Grid RowDefinitions="Auto,*,Auto">
+            <!-- Заголовок графика -->
+            <Border Grid.Row="0" Background="#252526" Padding="8,4">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="{Binding Title}" 
+                               FontWeight="Bold" 
+                               Foreground="White" 
+                               FontSize="12"/>
+                    <TextBlock Text="{Binding StatusMessage}" 
+                               Foreground="#9cdcfe" 
+                               FontSize="10" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ScottPlot График -->
+            <sp:AvaPlot Grid.Row="1" 
+                        x:Name="PlotControl" 
+                        Margin="5"/>
+
+            <!-- Панель инструментов -->
+            <Border Grid.Row="2" Background="#252526" Padding="8" BorderBrush="#3f3f46" BorderThickness="0,1,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Content="🔍+" Width="30" Height="25" 
+                            Background="#0d7377" Foreground="White" 
+                            Command="{Binding ZoomInCommand}"/>
+                    <Button Content="🔍-" Width="30" Height="25" 
+                            Background="#0d7377" Foreground="White" 
+                            Command="{Binding ZoomOutCommand}"/>
+                    <Button Content="🏠" Width="30" Height="25" 
+                            Background="#4e4376" Foreground="White" 
+                            Command="{Binding ResetViewCommand}"/>
+                    <Button Content="💾" Width="30" Height="25" 
+                            Background="#4e4376" Foreground="White" 
+                            Command="{Binding SavePlotCommand}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
 </UserControl>
