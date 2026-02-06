@@ -42,7 +42,7 @@
                       HorizontalScrollBarVisibility="Disabled">
             <StackPanel Spacing="10" Margin="10">
                 <!-- Загрузка данных -->
-                <Button Content="📂 Загрузить данные" 
+                <Button Name="LoadDataButton" Content="📂 Загрузить данные" 
                         Command="{Binding LoadDataCommand}"
                         Height="40" 
                         FontSize="14" 

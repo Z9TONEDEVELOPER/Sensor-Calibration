@@ -1,7 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CalibrationApp.ViewModels;
-using System.Reactive.Linq;
+using System.Reactive;
+
 namespace CalibrationApp.Views
 {
     public partial class MainWindow : Window
@@ -9,21 +10,19 @@ namespace CalibrationApp.Views
         public MainWindow()
         {
             InitializeComponent();
+            
+            // Подключение обработчиков событий
+            var loadBtn = this.FindControl<Button>("LoadDataButton");
+            if (loadBtn != null)
+                loadBtn.Click += OnLoadDataClicked;
         }
         
-        private async void UploadData(object? sender, RoutedEventArgs e)
+        private void OnLoadDataClicked(object? sender, RoutedEventArgs e)
         {
             if (DataContext is MainWindowViewModel vm)
             {
-                await vm.LoadDataCommand.Execute();
-            }
-        }
-        
-        private async void ProcessData(object? sender, RoutedEventArgs e)
-        {
-            if (DataContext is MainWindowViewModel vm)
-            {
-                await vm.ProcessDataCommand.Execute();
+                // ReactiveCommand.Execute() возвращает IObservable; запускаем команду
+                vm.LoadDataCommand.Execute().Subscribe(Observer.Create<Unit>(_ => { }));
             }
         }
     }

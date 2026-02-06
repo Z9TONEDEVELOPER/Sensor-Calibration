@@ -3,25 +3,21 @@ using System;
 using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Threading.Tasks;
-using System.Linq;
 using CalibrationApp.Models;
+using System.Linq;
 using CalibrationApp.Services;
 
 namespace CalibrationApp.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        // Сервисы
-        private readonly IFileService _fileService;
-        private readonly ISignalProcessingService _processingService;
-        
-        // Данные
-        private double[] _time;
-        private double[,] _sensors;
-        private double[] _timeClean;
-        private double[,] _sensorsClean;
-        private double[] _coeffsMedian;
-        private double[] _coeffsLsq;
+        // Инициализируем поля пустыми значениями
+        private double[] _time = Array.Empty<double>();
+        private double[,] _sensors = new double[0, 0];
+        private double[] _timeClean = Array.Empty<double>();
+        private double[,] _sensorsClean = new double[0, 0];
+        private double[] _coeffsMedian = Array.Empty<double>();
+        private double[] _coeffsLsq = Array.Empty<double>();
         
         // Параметры обработки
         private int _windowSize = 5;
@@ -36,7 +32,13 @@ namespace CalibrationApp.ViewModels
         private string _statusMessage = "Готов к работе";
         private bool _isProcessing = false;
         
-        public MainWindowViewModel(IFileService fileService, ISignalProcessingService processingService)
+        // Сервисы
+        private readonly IFileService _fileService;
+        private readonly ISignalProcessingService _processingService;
+        
+        public MainWindowViewModel(
+            IFileService fileService, 
+            ISignalProcessingService processingService)
         {
             _fileService = fileService;
             _processingService = processingService;
@@ -61,7 +63,15 @@ namespace CalibrationApp.ViewModels
             SensorStatistics = new ObservableCollection<SensorStat>();
         }
         
-        // Свойства
+        // Свойства (только для чтения, изменение через методы)
+        public double[] Time => _time;
+        public double[,] Sensors => _sensors;
+        public double[] TimeClean => _timeClean;
+        public double[,] SensorsClean => _sensorsClean;
+        public double[] CoeffsMedian => _coeffsMedian;
+        public double[] CoeffsLsq => _coeffsLsq;
+        
+        // Параметры
         public int WindowSize
         {
             get => _windowSize;
@@ -144,11 +154,12 @@ namespace CalibrationApp.ViewModels
                 var data = await _fileService.LoadDataAsync();
                 if (data != null)
                 {
-                    Time = data.Time;
-                    Sensors = data.Sensors;
+                    // Обновляем данные
+                    _time = data.Time ?? Array.Empty<double>();
+                    _sensors = data.Sensors ?? new double[0, 0];
                     
-                    int sensorCount = Sensors.GetLength(1);
-                    int pointCount = Time.Length;
+                    int sensorCount = _sensors.GetLength(1);
+                    int pointCount = _time.Length;
                     
                     StatusMessage = $"Загружено: {pointCount} точек, {sensorCount} сенсоров";
                     
@@ -179,9 +190,28 @@ namespace CalibrationApp.ViewModels
             UpdateRawPlot();
         }
         
+        private void UpdateRawPlot()
+        {
+            if (_time.Length > 0 && _sensors.GetLength(1) > 0)
+            {
+                int sensorIdx = _currentSensor - 1;
+                if (sensorIdx >= 0 && sensorIdx < _sensors.GetLength(1))
+                {
+                    double[] xData = _time;
+                    double[] yData = new double[_time.Length];
+                    for (int i = 0; i < _time.Length; i++)
+                    {
+                        yData[i] = _sensors[i, sensorIdx];
+                    }
+                    
+                    RawPlotViewModel.UpdatePlot(xData, yData, $"Сенсор {_currentSensor} (сырые)");
+                }
+            }
+        }
+        
         private async Task ProcessDataAsync()
         {
-            if (Time == null || Sensors == null)
+            if (_time.Length == 0 || _sensors.GetLength(0) == 0)
             {
                 StatusMessage = "Сначала загрузите данные";
                 return;
@@ -193,20 +223,20 @@ namespace CalibrationApp.ViewModels
             try
             {
                 var result = await _processingService.ProcessDataAsync(
-                    Time, 
-                    Sensors, 
-                    WindowSize, 
-                    LowessFraction, 
-                    OutlierThreshold, 
-                    OutlierMethod, 
-                    FilterType, 
-                    CalibMethod
+                    _time, 
+                    _sensors, 
+                    _windowSize, 
+                    _lowessFraction, 
+                    _outlierThreshold, 
+                    _outlierMethod, 
+                    _filterType, 
+                    _calibMethod
                 );
                 
-                TimeClean = result.TimeClean;
-                SensorsClean = result.SensorsClean;
-                CoeffsMedian = result.CoeffsMedian;
-                CoeffsLsq = result.CoeffsLsq;
+                _timeClean = result.TimeClean;
+                _sensorsClean = result.SensorsClean;
+                _coeffsMedian = result.CoeffsMedian;
+                _coeffsLsq = result.CoeffsLsq;
                 
                 StatusMessage = "Данные успешно обработаны";
                 
@@ -233,66 +263,54 @@ namespace CalibrationApp.ViewModels
             UpdateComparisonPlot();
         }
         
-        private void UpdateRawPlot()
-        {
-            if (Time == null || Sensors == null) return;
-            
-            int sensorIdx = CurrentSensor - 1;
-            if (sensorIdx < 0 || sensorIdx >= Sensors.GetLength(1)) return;
-            
-            double[] xData = Time;
-            double[] yData = new double[Time.Length];
-            for (int i = 0; i < Time.Length; i++)
-            {
-                yData[i] = Sensors[i, sensorIdx];
-            }
-            
-            RawPlotViewModel.UpdatePlot(xData, yData, $"Сенсор {CurrentSensor} (сырые)");
-        }
-        
         private void UpdateCalibratedPlot()
         {
-            if (TimeClean == null || SensorsClean == null) return;
-            
-            int sensorIdx = CurrentSensor - 1;
-            if (sensorIdx < 0 || sensorIdx >= SensorsClean.GetLength(1)) return;
-            
-            double coeff = CalibMethod == "median" ? CoeffsMedian[sensorIdx] : CoeffsLsq[sensorIdx];
-            
-            double[] xData = TimeClean;
-            double[] yData = new double[TimeClean.Length];
-            for (int i = 0; i < TimeClean.Length; i++)
+            if (_timeClean.Length > 0 && _sensorsClean.GetLength(1) > 0)
             {
-                yData[i] = SensorsClean[i, sensorIdx] * coeff;
+                int sensorIdx = _currentSensor - 1;
+                if (sensorIdx >= 0 && sensorIdx < _sensorsClean.GetLength(1))
+                {
+                    double coeff = _calibMethod == "median" ? 
+                        _coeffsMedian[sensorIdx] : 
+                        _coeffsLsq[sensorIdx];
+                    
+                    double[] xData = _timeClean;
+                    double[] yData = new double[_timeClean.Length];
+                    for (int i = 0; i < _timeClean.Length; i++)
+                    {
+                        yData[i] = _sensorsClean[i, sensorIdx] * coeff;
+                    }
+                    
+                    CalibPlotViewModel.UpdatePlot(xData, yData, $"Сенсор {_currentSensor} (калиброванные)");
+                }
             }
-            
-            CalibPlotViewModel.UpdatePlot(xData, yData, $"Сенсор {CurrentSensor} (калиброванные)");
         }
         
         private void UpdateComparisonPlot()
         {
-            if (SensorsClean == null) return;
-            
-            ComparisonPlotViewModel.ClearPlot();
-            
-            // Показываем все сенсоры на одном графике
-            for (int i = 0; i < Math.Min(8, SensorsClean.GetLength(1)); i++)
+            if (_sensorsClean.GetLength(1) > 0)
             {
-                double coeff = CalibMethod == "median" ? CoeffsMedian[i] : CoeffsLsq[i];
+                ComparisonPlotViewModel.ClearPlot();
                 
-                double[] yData = new double[TimeClean.Length];
-                for (int j = 0; j < TimeClean.Length; j++)
+                // Показываем все сенсоры на одном графике
+                for (int i = 0; i < Math.Min(8, _sensorsClean.GetLength(1)); i++)
                 {
-                    yData[j] = SensorsClean[j, i] * coeff;
+                    double coeff = _calibMethod == "median" ? _coeffsMedian[i] : _coeffsLsq[i];
+                    
+                    double[] yData = new double[_timeClean.Length];
+                    for (int j = 0; j < _timeClean.Length; j++)
+                    {
+                        yData[j] = _sensorsClean[j, i] * coeff;
+                    }
+                    
+                    ComparisonPlotViewModel.UpdatePlot(_timeClean, yData, $"Сенсор {i + 1}");
                 }
-                
-                ComparisonPlotViewModel.UpdatePlot(TimeClean, yData, $"Сенсор {i + 1}");
             }
         }
         
         private async Task ExportDataAsync()
         {
-            if (TimeClean == null || SensorsClean == null)
+            if (_timeClean.Length == 0 || _sensorsClean.GetLength(0) == 0)
             {
                 StatusMessage = "Нет данных для экспорта";
                 return;
@@ -300,7 +318,7 @@ namespace CalibrationApp.ViewModels
             
             try
             {
-                await _fileService.ExportDataAsync(TimeClean, SensorsClean, CoeffsMedian, CoeffsLsq);
+                await _fileService.ExportDataAsync(_timeClean, _sensorsClean, _coeffsMedian, _coeffsLsq);
                 StatusMessage = "Данные экспортированы";
             }
             catch (Exception ex)
@@ -317,16 +335,16 @@ namespace CalibrationApp.ViewModels
         
         private void UpdateStatistics()
         {
-            if (SensorsClean == null) return;
+            if (_sensorsClean.GetLength(1) == 0) return;
             
             SensorStatistics.Clear();
             
-            for (int i = 0; i < Math.Min(8, SensorsClean.GetLength(1)); i++)
+            for (int i = 0; i < Math.Min(8, _sensorsClean.GetLength(1)); i++)
             {
-                var sensorData = new double[SensorsClean.GetLength(0)];
+                var sensorData = new double[_sensorsClean.GetLength(0)];
                 for (int j = 0; j < sensorData.Length; j++)
                 {
-                    sensorData[j] = SensorsClean[j, i];
+                    sensorData[j] = _sensorsClean[j, i];
                 }
                 
                 var stat = new SensorStat
@@ -357,46 +375,8 @@ namespace CalibrationApp.ViewModels
             double sum = array.Sum(val => (val - avg) * (val - avg));
             return Math.Sqrt(sum / (array.Length - 1));
         }
-        
-        // Свойства для данных
-        public double[] Time
-        {
-            get => _time;
-            private set => this.RaiseAndSetIfChanged(ref _time, value);
-        }
-        
-        public double[,] Sensors
-        {
-            get => _sensors;
-            private set => this.RaiseAndSetIfChanged(ref _sensors, value);
-        }
-        
-        public double[] TimeClean
-        {
-            get => _timeClean;
-            private set => this.RaiseAndSetIfChanged(ref _timeClean, value);
-        }
-        
-        public double[,] SensorsClean
-        {
-            get => _sensorsClean;
-            private set => this.RaiseAndSetIfChanged(ref _sensorsClean, value);
-        }
-        
-        public double[] CoeffsMedian
-        {
-            get => _coeffsMedian;
-            private set => this.RaiseAndSetIfChanged(ref _coeffsMedian, value);
-        }
-        
-        public double[] CoeffsLsq
-        {
-            get => _coeffsLsq;
-            private set => this.RaiseAndSetIfChanged(ref _coeffsLsq, value);
-        }
     }
     
-    // Класс для статистики сенсоров
     public class SensorStat
     {
         public int SensorNumber { get; set; }

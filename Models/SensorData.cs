@@ -1,9 +1,10 @@
+using System;
 namespace CalibrationApp.Models
 {
     public class SensorData
     {
-        public double[] Time { get; set; }
-        public double[,] Sensors { get; set; }
+        public double[] Time { get; set; } = Array.Empty<double>(); // Инициализация пустым массивом
+        public double[,] Sensors { get; set; } = new double[0, 0];
     }
     
     
