@@ -11,9 +11,7 @@
         x:DataType="vm:MainWindowViewModel"
         Title="Calibra - Анализатор данных сенсоров">
         
-    <Design.DataContext>
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
+    <!-- Design-time DataContext removed (MainWindowViewModel requires services). DataContext is set at runtime in App.axaml.cs -->
 
     <Grid RowDefinitions="Auto,*" ColumnDefinitions="300,*">
         <!-- Меню -->

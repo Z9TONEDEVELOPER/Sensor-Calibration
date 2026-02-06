@@ -1,5 +1,7 @@
 using CalibrationApp.Models;
 using Avalonia.Controls;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -14,6 +16,11 @@ namespace CalibrationApp.Services
     
     public class FileService : IFileService
     {
+        private IClassicDesktopStyleApplicationLifetime? GetDesktopLifetime()
+        {
+            return Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+        }
+
         public async Task<SensorData?> LoadDataAsync()
         {
             var openFileDialog = new OpenFileDialog
@@ -27,7 +34,10 @@ namespace CalibrationApp.Services
                 AllowMultiple = false
             };
 
-            var result = await openFileDialog.ShowAsync(null); // null - потому что у нас нет родительского окна
+            var desktop = GetDesktopLifetime();
+            var owner = desktop?.MainWindow;
+
+            var result = await openFileDialog.ShowAsync(owner);
             if (result != null && result.Length > 0)
             {
                 var filePath = result[0];
@@ -83,7 +93,10 @@ namespace CalibrationApp.Services
                 InitialFileName = "calibration_results.csv"
             };
 
-            var result = await saveFileDialog.ShowAsync(null); // null - потому что у нас нет родительского окна
+            var desktop = GetDesktopLifetime();
+            var owner = desktop?.MainWindow;
+
+            var result = await saveFileDialog.ShowAsync(owner);
             if (!string.IsNullOrEmpty(result))
             {
                 await WriteResultsToFileAsync(result, time, sensors, coeffsMedian, coeffsLsq);
